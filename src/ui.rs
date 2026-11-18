@@ -1,5 +1,5 @@
-use crate::config::{Config, Menu, Search, Theme};
-use crate::items::Item;
+use crate::config::{Config, Menu, Search, TabsPosition, Theme};
+use crate::items::{Item, Page};
 use crate::keys::{Action, Bindings};
 use crate::search;
 use anyhow::{Context, Result, bail, ensure};
@@ -50,12 +50,12 @@ impl Cursor {
 }
 
 pub fn choose(
-    items: Rc<[Item]>,
+    pages: Rc<[Page]>,
     config: &Config,
     bindings: Bindings,
-    prompt: &str,
+    prompt: Option<String>,
     allow_custom: bool,
-) -> Result<Option<Selection>> {
+) -> Result<Option<(usize, Selection)>> {
     glib::set_prgname(Some("poptato"));
     gtk::init().context("could not open a graphical session")?;
     let display = gdk::Display::default().context("could not get the display")?;
@@ -77,7 +77,6 @@ pub fn choose(
     window.set_child(Some(&panel));
 
     let entry = gtk::Entry::builder()
-        .placeholder_text(prompt)
         .text(&menu.query)
         .truncate_multiline(true)
         .build();
@@ -105,10 +104,45 @@ pub fn choose(
 
     let event_loop = glib::MainLoop::new(None, false);
     let selected = Rc::new(RefCell::new(None));
-    let cursor = RefCell::new(Cursor::new(&items, &menu.query, &config.search));
+    let tabs = gtk::Box::new(gtk::Orientation::Horizontal, theme.spacing);
+    tabs.add_css_class("menu-tabs");
+    let tab_strip = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Automatic)
+        .vscrollbar_policy(gtk::PolicyType::Never)
+        .child(&tabs)
+        .build();
+    let tab_buttons = if pages.len() > 1 {
+        match menu.tabs_position {
+            TabsPosition::Top => panel.prepend(&tab_strip),
+            TabsPosition::Bottom => panel.append(&tab_strip),
+        }
+        pages
+            .iter()
+            .map(|page| {
+                let button = gtk::Button::with_label(&page.label);
+                button.add_css_class("menu-tab");
+                button.set_focus_on_click(false);
+                tabs.append(&button);
+                button
+            })
+            .collect::<Vec<_>>()
+    } else {
+        Vec::new()
+    };
+
     // GTK signal handlers own their context until the window is destroyed.
     let view = Rc::new(View {
-        items,
+        pages,
+        active: Cell::new(0),
+        recent_apps: menu.recent_apps,
+        prompt,
+        entry: entry.downgrade(),
+        empty_message: menu.empty_message.clone(),
+        tabs: tab_buttons
+            .iter()
+            .map(|button| button.downgrade())
+            .collect(),
+        tab_strip: tab_strip.downgrade(),
         search: Search {
             matching: config.search.matching,
             case_sensitive: config.search.case_sensitive,
@@ -121,8 +155,13 @@ pub fn choose(
         show_descriptions: menu.show_descriptions,
         list: list.downgrade(),
         empty: empty.downgrade(),
-        cursor,
+        cursor: RefCell::new(Cursor::new(&[], "", &config.search)),
     });
+
+    for (index, button) in tab_buttons.iter().enumerate() {
+        let view = view.clone();
+        button.connect_clicked(move |_| view.switch_to(index));
+    }
 
     list.connect_row_selected({
         let view = view.clone();
@@ -146,7 +185,7 @@ pub fn choose(
                     .copied()
             };
             if let Some(index) = index {
-                *selected.borrow_mut() = Some(Selection::Item(index));
+                *selected.borrow_mut() = Some((view.active.get(), Selection::Item(index)));
                 if let Some(window) = window.upgrade() {
                     window.close();
                 }
@@ -157,9 +196,7 @@ pub fn choose(
     entry.connect_changed({
         let view = view.clone();
         move |entry| {
-            *view.cursor.borrow_mut() =
-                Cursor::new(&view.items, entry.text().as_str(), &view.search);
-            view.render();
+            view.filter(entry.text().as_str());
         }
     });
 
@@ -184,6 +221,21 @@ pub fn choose(
                 return glib::Propagation::Proceed;
             }
             let Some(action) = bindings.action(key, modifiers) else {
+                let mods = modifiers
+                    & (gdk::ModifierType::SHIFT_MASK
+                        | gdk::ModifierType::CONTROL_MASK
+                        | gdk::ModifierType::ALT_MASK
+                        | gdk::ModifierType::SUPER_MASK);
+                if view.pages.len() > 1
+                    && matches!(key, gdk::Key::Tab | gdk::Key::ISO_Left_Tab)
+                    && (mods.is_empty() || mods == gdk::ModifierType::SHIFT_MASK)
+                {
+                    let active = view.active.get();
+                    let count = view.pages.len();
+                    let step = if mods.is_empty() { 1 } else { count - 1 };
+                    view.switch_to((active + step) % count);
+                    return glib::Propagation::Stop;
+                }
                 return glib::Propagation::Proceed;
             };
             match action {
@@ -200,6 +252,10 @@ pub fn choose(
                     let cursor = view.cursor.borrow();
                     let matched = cursor.matches.get(cursor.selected).copied();
                     let text = entry.text();
+                    let page = view.page();
+                    let allow_custom = allow_custom
+                        && page.mode.accepts_custom()
+                        && page.items(view.recent_apps).is_ok();
                     let choice = match action {
                         Action::Accept if matched.is_some() => matched.map(Selection::Item),
                         _ if allow_custom && !text.trim().is_empty() => {
@@ -209,7 +265,7 @@ pub fn choose(
                     };
                     drop(cursor);
                     if let Some(choice) = choice {
-                        *selected.borrow_mut() = Some(choice);
+                        *selected.borrow_mut() = Some((view.active.get(), choice));
                         if let Some(window) = window.upgrade() {
                             window.close();
                         }
@@ -253,7 +309,7 @@ pub fn choose(
         });
     }
 
-    view.render();
+    view.switch_to(0);
     entry.grab_focus();
     entry.set_position(-1);
     window.present();
@@ -262,7 +318,14 @@ pub fn choose(
 }
 
 struct View {
-    items: Rc<[Item]>,
+    pages: Rc<[Page]>,
+    active: Cell<usize>,
+    recent_apps: bool,
+    prompt: Option<String>,
+    entry: glib::WeakRef<gtk::Entry>,
+    empty_message: String,
+    tabs: Vec<glib::WeakRef<gtk::Button>>,
+    tab_strip: glib::WeakRef<gtk::ScrolledWindow>,
     search: Search,
     lines: usize,
     wrap_navigation: bool,
@@ -275,6 +338,45 @@ struct View {
 }
 
 impl View {
+    fn page(&self) -> &Page {
+        &self.pages[self.active.get()]
+    }
+
+    fn switch_to(&self, index: usize) {
+        self.active.set(index);
+        for (position, button) in self.tabs.iter().enumerate() {
+            if let Some(button) = button.upgrade() {
+                if position == index {
+                    button.add_css_class("selected");
+                    if let Some(strip) = self.tab_strip.upgrade()
+                        && let Some(bounds) = button.compute_bounds(&strip)
+                    {
+                        let adjustment = strip.hadjustment();
+                        let left = adjustment.value() + f64::from(bounds.x());
+                        adjustment.clamp_page(left, left + f64::from(bounds.width()));
+                    }
+                } else {
+                    button.remove_css_class("selected");
+                }
+            }
+        }
+        if let Some(entry) = self.entry.upgrade() {
+            entry.set_placeholder_text(Some(
+                self.prompt
+                    .as_deref()
+                    .unwrap_or_else(|| self.page().mode.prompt()),
+            ));
+            self.filter(entry.text().as_str());
+            entry.grab_focus();
+        }
+    }
+
+    fn filter(&self, query: &str) {
+        let items = self.page().items(self.recent_apps).unwrap_or_default();
+        *self.cursor.borrow_mut() = Cursor::new(items, query, &self.search);
+        self.render();
+    }
+
     fn render(&self) {
         let (Some(list), Some(empty)) = (self.list.upgrade(), self.empty.upgrade()) else {
             return;
@@ -287,9 +389,12 @@ impl View {
         while let Some(child) = list.row_at_index(0) {
             list.remove(&child);
         }
+        let items = self.page().items(self.recent_apps);
+        empty.set_text(items.as_ref().err().copied().unwrap_or(&self.empty_message));
+        let items = items.unwrap_or_default();
         for index in visible {
             list.append(&row(
-                &self.items[index],
+                &items[index],
                 self.icon_size,
                 self.show_icons,
                 self.show_descriptions,
@@ -455,6 +560,15 @@ fn install_css(display: &gdk::Display, theme: &Theme) -> Result<()> {
             color: {selected_foreground};
         }}
         .poptato .menu-empty {{ padding: {row_padding}px; }}
+        .poptato .menu-tab {{
+            background: {input_background};
+            color: {foreground};
+            border-radius: {inner_radius}px;
+        }}
+        .poptato .menu-tab.selected {{
+            background: {selected_background};
+            color: {selected_foreground};
+        }}
         "#,
         background = theme.background,
         foreground = theme.foreground,

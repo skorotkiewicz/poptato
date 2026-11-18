@@ -23,6 +23,7 @@ pub struct Config {
 #[serde(deny_unknown_fields)]
 pub struct Menu {
     pub mode: String,
+    pub tabs_position: TabsPosition,
     pub prompt: Option<String>,
     pub query: String,
     pub width: i32,
@@ -34,9 +35,17 @@ pub struct Menu {
     pub wrap_navigation: bool,
     pub activate_on_single_click: bool,
     pub show_icons: bool,
+    pub recent_apps: bool,
     pub show_descriptions: bool,
     pub empty_message: String,
     pub allow_custom: bool,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TabsPosition {
+    Top,
+    Bottom,
 }
 
 #[derive(Clone, Copy, Deserialize)]
@@ -109,7 +118,7 @@ pub struct Keys {
     pub cancel: Vec<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CustomMode {
     pub prompt: Option<String>,
@@ -248,7 +257,7 @@ fn validate_text(value: &str) -> Result<()> {
 }
 
 fn builtin(name: &str) -> bool {
-    matches!(name, "apps" | "drun" | "run" | "dmenu")
+    matches!(name, "apps" | "drun" | "run" | "dmenu" | "tabs")
 }
 
 fn validate_command(args: &[String]) -> Result<()> {

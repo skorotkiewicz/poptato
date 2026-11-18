@@ -159,10 +159,15 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm --needed git curl openssh sudo
+          pacman -Syu --noconfirm --needed git openssh
 
       - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: poptato-*
+          merge-multiple: true
 
       - name: Prepare AUR package and checksums
         shell: bash
@@ -171,14 +176,9 @@ jobs:
           mkdir -p aur-dist
           cp .github/PKGBUILD aur-dist/
           sed -i "s/^pkgver=.*/pkgver=${VERSION}/" aur-dist/PKGBUILD
-          sed -i "s|^url=.*|url='https://github.com/${GITHUB_REPOSITORY}'|" aur-dist/PKGBUILD
           for arch in x86_64 aarch64; do
             archive="poptato-${VERSION}-${arch}-linux.tar.gz"
-            curl --fail --location --silent --show-error \
-              --retry 5 --retry-delay 2 --retry-all-errors \
-              "https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/${archive}" \
-              --output "$archive"
-            checksum="$(sha256sum "$archive")"
+            checksum="$(sha256sum "artifacts/$archive")"
             checksum="${checksum%% *}"
             sed -i "s/^sha256sums_${arch}=.*/sha256sums_${arch}=('${checksum}')/" aur-dist/PKGBUILD
           done
@@ -186,9 +186,8 @@ jobs:
       - name: Generate .SRCINFO as builder user
         run: |
           useradd -m builder
-          printf 'builder ALL=(ALL) NOPASSWD: ALL\n' >> /etc/sudoers
           chown -R builder:builder aur-dist
-          sudo -u builder bash -lc 'cd aur-dist && makepkg --printsrcinfo > .SRCINFO'
+          runuser -u builder -- bash -c 'cd aur-dist && makepkg --printsrcinfo > .SRCINFO'
 
       - name: Publish AUR package
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.2

@@ -1,6 +1,8 @@
 [menu]
-# apps, run, dmenu, or a name under [modes].
-mode = "apps"
+# apps, run, dmenu, tabs, or a name under [modes].
+mode = "tabs"
+# Put the tabs above the search box or below the results.
+tabs_position = "bottom"
 # Set prompt to override the mode's default placeholder.
 # prompt = "Search"
 query = ""
@@ -16,6 +18,8 @@ close_on_focus_loss = true
 wrap_navigation = true
 activate_on_single_click = true
 show_icons = true
+# Show recently launched apps first, ordered by last launch.
+recent_apps = true
 show_descriptions = true
 empty_message = "No matches"
 # Allow typed input in run, dmenu, and custom modes.

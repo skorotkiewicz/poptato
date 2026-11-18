@@ -1,7 +1,10 @@
 use crate::config::{Config, CustomMode};
+use crate::history;
 use anyhow::{Context, Result, anyhow, ensure};
 use gio_unix::DesktopAppInfo;
 use gtk::gio::{self, prelude::*};
+use std::cell::OnceCell;
+use std::cmp::Reverse;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
@@ -10,11 +13,38 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-pub enum Mode<'a> {
+pub enum Mode {
     Apps,
     Run,
     Dmenu,
-    Custom(&'a CustomMode),
+    Custom(CustomMode),
+}
+
+pub struct Page {
+    pub label: String,
+    pub mode: Mode,
+    items: OnceCell<Result<Vec<Item>, String>>,
+}
+
+impl Page {
+    pub fn new(label: impl Into<String>, mode: Mode) -> Self {
+        Self {
+            label: label.into(),
+            mode,
+            items: OnceCell::new(),
+        }
+    }
+
+    pub fn items(&self, recent_apps: bool) -> Result<&[Item], &str> {
+        self.items
+            .get_or_init(|| {
+                self.mode
+                    .items(recent_apps)
+                    .map_err(|error| format!("{error:#}"))
+            })
+            .as_deref()
+            .map_err(String::as_str)
+    }
 }
 
 pub struct Item {
@@ -31,8 +61,8 @@ enum Target {
     Text,
 }
 
-impl<'a> Mode<'a> {
-    pub fn resolve(name: &str, config: &'a Config) -> Result<Self> {
+impl Mode {
+    pub fn resolve(name: &str, config: &Config) -> Result<Self> {
         Ok(match name {
             "apps" | "drun" => Self::Apps,
             "run" => Self::Run,
@@ -41,6 +71,7 @@ impl<'a> Mode<'a> {
                 config
                     .modes
                     .get(name)
+                    .cloned()
                     .ok_or_else(|| anyhow!("unknown mode {name:?}"))?,
             ),
         })
@@ -55,9 +86,9 @@ impl<'a> Mode<'a> {
         }
     }
 
-    pub fn items(&self) -> Result<Vec<Item>> {
+    pub fn items(&self, recent_apps: bool) -> Result<Vec<Item>> {
         match self {
-            Self::Apps => Ok(applications()),
+            Self::Apps => Ok(applications(recent_apps)),
             Self::Run => Ok(programs()),
             Self::Dmenu => {
                 let stdin = io::stdin();
@@ -91,11 +122,20 @@ impl<'a> Mode<'a> {
         item: Option<&Item>,
         text: &str,
         context: Option<&gio::AppLaunchContext>,
+        recent_apps: bool,
     ) -> Result<()> {
         match item.map(|item| &item.target) {
-            Some(Target::App(app)) => app
-                .launch(&[], context)
-                .with_context(|| format!("could not launch {}", app.display_name())),
+            Some(Target::App(app)) => {
+                app.launch(&[], context)
+                    .with_context(|| format!("could not launch {}", app.display_name()))?;
+                if recent_apps
+                    && let Some(id) = app.id()
+                    && let Err(error) = history::record(&id)
+                {
+                    eprintln!("poptato: could not save launch history: {error}");
+                }
+                Ok(())
+            }
             Some(Target::Program(path)) => spawn(path.as_os_str(), std::iter::empty::<&str>()),
             _ => {
                 let selection = item.map_or(text, |item| &item.label);
@@ -153,7 +193,7 @@ fn text_items(source: impl BufRead) -> Result<Vec<Item>> {
         .collect()
 }
 
-fn applications() -> Vec<Item> {
+fn applications(recent_apps: bool) -> Vec<Item> {
     let mut items: Vec<_> = gio::AppInfo::all()
         .into_iter()
         .filter(|app| app.should_show())
@@ -178,7 +218,13 @@ fn applications() -> Vec<Item> {
             }
         })
         .collect();
-    items.sort_by_cached_key(|item| item.label.to_lowercase());
+    items.sort_by_cached_key(|item| {
+        let last_launch = match &item.target {
+            Target::App(app) if recent_apps => app.id().and_then(|id| history::last_launch(&id)),
+            _ => None,
+        };
+        (Reverse(last_launch), item.label.to_lowercase())
+    });
     items
 }
 

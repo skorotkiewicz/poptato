@@ -1,14 +1,15 @@
 mod config;
+mod history;
 mod items;
 mod keys;
 mod search;
 mod ui;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow, ensure};
 use clap::Parser;
 use config::{Config, DEFAULT_CONFIG};
 use gtk::prelude::*;
-use items::Mode;
+use items::{Mode, Page};
 use keys::Bindings;
 use std::ffi::{OsStr, OsString};
 use std::io::{self, IsTerminal, Write};
@@ -23,7 +24,7 @@ struct Cli {
     #[arg(long, conflicts_with = "mode")]
     dmenu: bool,
 
-    /// Select apps, run, dmenu, or a configured custom mode
+    /// Select apps, run, dmenu, tabs, or a configured custom mode
     #[arg(long, visible_alias = "show", short = 'm')]
     mode: Option<String>,
 
@@ -94,20 +95,19 @@ fn run(cli: Cli) -> Result<bool> {
         return Ok(true);
     }
 
-    let default_mode = if io::stdin().is_terminal() {
-        config.menu.mode.as_str()
-    } else {
-        // A desktop key binding may inherit /dev/null rather than a terminal.
-        // Only a pipe or redirected file implies stdin selection.
-        use std::os::unix::fs::FileTypeExt;
-        let piped = std::fs::metadata("/proc/self/fd/0")
+    use std::os::unix::fs::FileTypeExt;
+    let piped = !io::stdin().is_terminal()
+        && std::fs::metadata("/proc/self/fd/0")
             .is_ok_and(|fd| fd.is_file() || fd.file_type().is_fifo() || fd.file_type().is_socket());
-        if piped { "dmenu" } else { &config.menu.mode }
-    };
-    let mode_name = if cli.dmenu {
+    let default_mode = if piped && config.menu.mode != "tabs" {
         "dmenu"
     } else {
-        cli.mode.as_deref().unwrap_or(default_mode)
+        &config.menu.mode
+    };
+    let mode_name = if cli.dmenu {
+        "dmenu".to_owned()
+    } else {
+        cli.mode.unwrap_or_else(|| default_mode.to_owned())
     };
     if let Some(query) = cli.query {
         config::validate_query(&query).context("--query")?;
@@ -120,34 +120,55 @@ fn run(cli: Cli) -> Result<bool> {
         config.search.case_sensitive = cli.case_sensitive;
     }
 
-    let mode = Mode::resolve(mode_name, &config)?;
-    let items: Rc<[items::Item]> = mode.items()?.into();
-    if cli.list {
-        let mut stdout = io::stdout().lock();
-        for index in search::matches(&items, &config.menu.query, &config.search) {
-            writeln!(stdout, "{}", items[index].label)?;
+    let recent_apps = config.menu.recent_apps;
+    let pages: Rc<[Page]> = if mode_name == "tabs" {
+        ensure!(!cli.list, "--list needs a single mode");
+        let mut pages = vec![Page::new("Apps", Mode::Apps), Page::new("Run", Mode::Run)];
+        if piped {
+            pages.push(Page::new("Stdin", Mode::Dmenu));
         }
-        return Ok(true);
-    }
+        pages.extend(
+            config
+                .modes
+                .iter()
+                .map(|(name, mode)| Page::new(name, Mode::Custom(mode.clone()))),
+        );
+        pages.into()
+    } else {
+        let page = Page::new(&mode_name, Mode::resolve(&mode_name, &config)?);
+        let items = page
+            .items(recent_apps)
+            .map_err(|error| anyhow!("{error}"))?;
+        if cli.list {
+            let mut stdout = io::stdout().lock();
+            for index in search::matches(items, &config.menu.query, &config.search) {
+                writeln!(stdout, "{}", items[index].label)?;
+            }
+            return Ok(true);
+        }
+        vec![page].into()
+    };
 
-    let prompt = cli
-        .prompt
-        .as_deref()
-        .or(config.menu.prompt.as_deref())
-        .unwrap_or_else(|| mode.prompt());
-    let allow_custom = config.menu.allow_custom && !cli.no_custom && mode.accepts_custom();
-    let selection = ui::choose(items.clone(), &config, bindings, prompt, allow_custom)?;
-    let Some(selection) = selection else {
+    let prompt = cli.prompt.or_else(|| config.menu.prompt.clone());
+    let allow_custom = config.menu.allow_custom && !cli.no_custom;
+    let selection = ui::choose(pages.clone(), &config, bindings, prompt, allow_custom)?;
+    let Some((page_index, selection)) = selection else {
         return Ok(false);
     };
+    let page = &pages[page_index];
     let context = gtk::gdk::Display::default()
         .context("could not get the display")?
         .app_launch_context();
+    let context = Some(context.upcast_ref());
     match selection {
         ui::Selection::Item(index) => {
-            mode.activate(Some(&items[index]), "", Some(context.upcast_ref()))?
+            let items = page
+                .items(recent_apps)
+                .map_err(|error| anyhow!("{error}"))?;
+            page.mode
+                .activate(Some(&items[index]), "", context, recent_apps)?;
         }
-        ui::Selection::Custom(text) => mode.activate(None, &text, Some(context.upcast_ref()))?,
+        ui::Selection::Custom(text) => page.mode.activate(None, &text, context, recent_apps)?,
     }
     Ok(true)
 }

@@ -17,5 +17,6 @@ sha256sums_aarch64=('SKIP')
 package() {
     install -Dm755 poptato "${pkgdir}/usr/bin/poptato"
     install -Dm644 config.toml "${pkgdir}/usr/share/doc/${pkgname}/config.toml"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
     install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
 }
