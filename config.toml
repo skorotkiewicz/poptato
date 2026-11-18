@@ -1,0 +1,68 @@
+[menu]
+# apps, run, dmenu, or a name under [modes].
+mode = "apps"
+# Set prompt to override the mode's default placeholder.
+# prompt = "Search"
+query = ""
+width = 600
+lines = 9
+# Layer-shell placement: center, top, bottom, left, right, or a corner.
+placement = "center"
+# Layer-shell distance from the anchored edges, in logical pixels.
+margin = 24
+# Layer-shell stacking: overlay or top.
+layer = "overlay"
+close_on_focus_loss = true
+wrap_navigation = true
+activate_on_single_click = true
+show_icons = true
+show_descriptions = true
+empty_message = "No matches"
+# Allow typed input in run, dmenu, and custom modes.
+allow_custom = true
+
+[search]
+# fuzzy, substring, or prefix.
+matching = "fuzzy"
+case_sensitive = false
+# Rank matches by score. Empty queries always keep source order.
+sort = true
+
+[theme]
+# Use hex colors in #RGB, #RGBA, #RRGGBB, or #RRGGBBAA format.
+background = "#14171e"
+foreground = "#edf0f7"
+muted = "#a0aabb"
+input_background = "#1d222c"
+border_color = "#343d4c"
+selected_background = "#b8d0ff"
+selected_foreground = "#141d31"
+font_family = "sans-serif"
+font_size = 14
+icon_size = 20
+padding = 12
+spacing = 8
+row_padding = 8
+border_width = 1
+radius = 12
+# Load additional GTK CSS relative to this file.
+# css = "theme.css"
+
+[keys]
+# GDK key names with optional Ctrl, Alt, Shift, and Super modifiers.
+# Set an action to [] to remove its shortcuts.
+up = ["Up", "Ctrl+k"]
+down = ["Down", "Ctrl+j"]
+page_up = ["Page_Up"]
+page_down = ["Page_Down"]
+accept = ["Return", "KP_Enter"]
+accept_custom = ["Shift+Return", "Shift+KP_Enter"]
+cancel = ["Escape", "Ctrl+g"]
+
+# A custom mode reads one item per line from a command.
+# An omitted action prints the selection. Each exact "{selection}" argument
+# is replaced with the selected line as a single argument.
+# [modes.example]
+# prompt = "Pick a value"
+# source = ["printf", "%s\n", "alpha", "beta", "gamma"]
+# action = ["notify-send", "{selection}"]
