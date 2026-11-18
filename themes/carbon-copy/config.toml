@@ -1,0 +1,24 @@
+# Carbon Copy · blue ink on cool grey stock
+[menu]
+width = 540
+lines = 8
+tabs_position = "bottom"
+show_icons = false
+show_descriptions = true
+
+[theme]
+font_family = "monospace"
+font_size = 14
+padding = 10
+spacing = 6
+row_padding = 6
+border_width = 1
+radius = 0
+background = "#DBE1E6"
+foreground = "#1B2B43"
+muted = "#4B5A6D"
+input_background = "#CAD4DD"
+border_color = "#8996A5"
+selected_background = "#2C496D"
+selected_foreground = "#F2F5F8"
+css = "theme.css"

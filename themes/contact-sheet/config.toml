@@ -1,0 +1,23 @@
+# Contact Sheet · amber frame marks on charcoal
+[menu]
+width = 544
+lines = 10
+tabs_position = "bottom"
+
+[theme]
+font_family = "monospace"
+font_size = 14
+icon_size = 17
+padding = 12
+spacing = 6
+row_padding = 6
+border_width = 1
+radius = 0
+background = "#242326"
+foreground = "#F1EDE6"
+muted = "#BAB2A6"
+input_background = "#312F32"
+border_color = "#625B56"
+selected_background = "#4C3C30"
+selected_foreground = "#FFF2D8"
+css = "theme.css"

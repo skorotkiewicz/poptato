@@ -1,0 +1,23 @@
+# Soundings · depth scale on a night chart
+[menu]
+width = 620
+lines = 8
+tabs_position = "bottom"
+
+[theme]
+font_family = "sans-serif"
+font_size = 15
+icon_size = 21
+padding = 14
+spacing = 8
+row_padding = 8
+border_width = 1
+radius = 4
+background = "#102D38"
+foreground = "#E2F0EF"
+muted = "#A1BEBC"
+input_background = "#193C46"
+border_color = "#43636C"
+selected_background = "#235760"
+selected_foreground = "#EEFFFA"
+css = "theme.css"

@@ -1,0 +1,20 @@
+.poptato .menu-input {
+    background: transparent;
+    border-width: 0 0 1px;
+    caret-color: currentColor;
+    outline-color: #607891;
+}
+
+.poptato .menu-input placeholder {
+    opacity: 1;
+}
+
+.poptato .menu-tab {
+    border: 0;
+    box-shadow: none;
+    padding: 2px 8px;
+}
+
+.poptato .menu-tab:not(.selected) {
+    background: transparent;
+}

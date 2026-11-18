@@ -1,0 +1,23 @@
+# Midnight Diner · cream enamel and cherry ink
+[menu]
+width = 566
+lines = 7
+tabs_position = "bottom"
+
+[theme]
+font_family = "serif"
+font_size = 17
+icon_size = 22
+padding = 16
+spacing = 9
+row_padding = 9
+border_width = 1
+radius = 10
+background = "#F3E7D3"
+foreground = "#34231F"
+muted = "#70564D"
+input_background = "#EBDAC4"
+border_color = "#9A796B"
+selected_background = "#7A3041"
+selected_foreground = "#FFF3DE"
+css = "theme.css"
