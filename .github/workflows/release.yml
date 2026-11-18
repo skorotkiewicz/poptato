@@ -15,6 +15,8 @@ jobs:
   build:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    container:
+      image: debian:trixie-slim
     strategy:
       fail-fast: false
       matrix:
@@ -27,8 +29,10 @@ jobs:
     steps:
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential ca-certificates pkg-config libgtk-4-dev libgtk4-layer-shell-dev
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            build-essential ca-certificates curl git pkg-config \
+            libgtk-4-dev libgtk4-layer-shell-dev
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -66,25 +70,30 @@ jobs:
           mkdir -p dist/bundle
           install -Dm755 "target/${TARGET}/release/poptato" dist/bundle/poptato
           install -Dm644 README.md dist/bundle/README.md
+          install -Dm644 LICENSE dist/bundle/LICENSE
           install -Dm644 config.toml dist/bundle/config.toml
-          tar -C dist/bundle -czf "poptato-${VERSION}-${ARCH}-linux.tar.gz" \
-            poptato README.md config.toml
+          tar -C dist/bundle -czf "dist/poptato-${VERSION}-${ARCH}-linux.tar.gz" \
+            poptato README.md LICENSE config.toml
 
       - uses: actions/upload-artifact@v4
         with:
-          name: poptato-${{ matrix.arch }}
+          name: poptato-${{ matrix.target }}
           path: dist/*.tar.gz
           if-no-files-found: error
 
   test:
     name: Test
     runs-on: ubuntu-24.04
+    container:
+      image: debian:trixie-slim
 
     steps:
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential ca-certificates pkg-config libgtk-4-dev libgtk4-layer-shell-dev
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            build-essential ca-certificates curl git pkg-config \
+            libgtk-4-dev libgtk4-layer-shell-dev
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -94,12 +103,16 @@ jobs:
   check:
     name: Code Quality
     runs-on: ubuntu-24.04
+    container:
+      image: debian:trixie-slim
 
     steps:
       - name: Install build dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends -y build-essential ca-certificates pkg-config libgtk-4-dev libgtk4-layer-shell-dev
+          apt-get update
+          apt-get install --no-install-recommends -y \
+            build-essential ca-certificates curl git pkg-config \
+            libgtk-4-dev libgtk4-layer-shell-dev
 
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -128,12 +141,13 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          files: artifacts/*.tar.gz
+          files: |
+            artifacts/*.tar.gz
           fail_on_unmatched_files: true
           generate_release_notes: true
 
   aur-publish:
-    name: Publish Poptato to AUR
+    name: Publish to AUR
     needs: [build, release]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-24.04
@@ -181,10 +195,10 @@ jobs:
         with:
           pkgname: poptato-bin
           pkgbuild: ./aur-dist/PKGBUILD
-          assets: aur-dist/.SRCINFO
+          assets: |
+            aur-dist/.SRCINFO
           commit_username: ${{ secrets.AUR_USERNAME }}
           commit_email: ${{ secrets.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: "Update poptato-bin to ${{ needs.build.outputs.version }}"
           ssh_keyscan_types: rsa,ecdsa,ed25519
-
