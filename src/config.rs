@@ -15,8 +15,15 @@ pub struct Config {
     pub search: Search,
     pub theme: Theme,
     pub keys: Keys,
+    pub terminal: Terminal,
     #[serde(default)]
     pub modes: BTreeMap<String, CustomMode>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Terminal {
+    pub enabled: bool,
 }
 
 #[derive(Deserialize)]

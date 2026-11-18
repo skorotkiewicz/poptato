@@ -182,6 +182,23 @@ poptato --mode colors
 
 Each exact `{selection}` argument is replaced with the chosen line as **one argument**, even if it contains spaces. Leave out `action` to print the selection to stdout. Preview the generated list with `poptato --mode colors --list`.
 
+## Open a terminal tab
+
+To include an embedded terminal, install the GTK4 VTE development files (`vte4` on Arch or `libvte-2.91-gtk4-dev` on Debian) and build from source.
+
+```bash
+cargo install --path . --locked --features terminal
+```
+
+Enable the tab in your config and run `poptato --mode tabs`.
+
+```toml
+[terminal]
+enabled = true
+```
+
+The shell starts the first time you open Terminal and keeps running when you switch tabs or move focus elsewhere. Inside Terminal, Tab and the usual shell shortcuts go to the shell. Use Ctrl+Tab or Ctrl+Shift+Tab to switch tabs and Ctrl+Shift+W to close Poptato and end the session. If the shell exits, switch away and back to start another.
+
 ## Tiny details, big difference
 
 - Poptato runs commands directly. For shell operators (`|`, `&&`, redirects), explicitly invoke your shell.

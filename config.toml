@@ -63,6 +63,11 @@ accept = ["Return", "KP_Enter"]
 accept_custom = ["Shift+Return", "Shift+KP_Enter"]
 cancel = ["Escape", "Ctrl+g"]
 
+[terminal]
+# Show a Terminal tab in tabs mode when built with the terminal Cargo feature.
+# Start $SHELL when the tab is first opened.
+enabled = false
+
 # A custom mode reads one item per line from a command.
 # An omitted action prints the selection. Each exact "{selection}" argument
 # is replaced with the selected line as a single argument.

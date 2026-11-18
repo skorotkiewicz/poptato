@@ -24,7 +24,7 @@ jobs:
           apt-get update
           apt-get install --no-install-recommends -y \
             build-essential ca-certificates curl git pkg-config \
-            libgtk-4-dev libgtk4-layer-shell-dev
+            libgtk-4-dev libgtk4-layer-shell-dev libvte-2.91-gtk4-dev
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:

@@ -3,6 +3,8 @@ mod history;
 mod items;
 mod keys;
 mod search;
+#[cfg(feature = "terminal")]
+mod terminal;
 mod ui;
 
 use anyhow::{Context, Result, anyhow, ensure};
@@ -116,6 +118,8 @@ fn run(cli: Cli) -> Result<bool> {
     if let Some(lines) = cli.lines {
         config.menu.lines = usize::from(lines);
     }
+    // A single-mode invocation never creates the terminal tab.
+    config.terminal.enabled &= mode_name == "tabs";
     if cli.insensitive || cli.case_sensitive {
         config.search.case_sensitive = cli.case_sensitive;
     }

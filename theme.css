@@ -179,3 +179,11 @@ window.poptato {
     color: #141d31;
 }
 */
+
+/* Scroll container for the optional Terminal tab */
+/*
+.poptato .menu-terminal {
+    border: 1px solid #343d4c;
+    border-radius: 8px;
+}
+*/

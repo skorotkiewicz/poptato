@@ -2,6 +2,8 @@ use crate::config::{Config, Menu, Search, TabsPosition, Theme};
 use crate::items::{Item, Page};
 use crate::keys::{Action, Bindings};
 use crate::search;
+#[cfg(feature = "terminal")]
+use crate::terminal::TerminalTab;
 use anyhow::{Context, Result, bail, ensure};
 use gtk::{gdk, glib, pango, prelude::*};
 use std::cell::{Cell, RefCell};
@@ -102,6 +104,13 @@ pub fn choose(
     empty.set_ellipsize(pango::EllipsizeMode::End);
     results.append(&empty);
 
+    #[cfg(feature = "terminal")]
+    let terminal = config.terminal.enabled.then(|| {
+        let tab = TerminalTab::new(row_height * menu.lines as i32);
+        panel.append(&tab.widget);
+        tab
+    });
+
     let event_loop = glib::MainLoop::new(None, false);
     let selected = Rc::new(RefCell::new(None));
     let tabs = gtk::Box::new(gtk::Orientation::Horizontal, theme.spacing);
@@ -116,10 +125,12 @@ pub fn choose(
             TabsPosition::Top => panel.prepend(&tab_strip),
             TabsPosition::Bottom => panel.append(&tab_strip),
         }
-        pages
-            .iter()
-            .map(|page| {
-                let button = gtk::Button::with_label(&page.label);
+        let labels = pages.iter().map(|page| page.label.as_str());
+        #[cfg(feature = "terminal")]
+        let labels = labels.chain(terminal.iter().map(|_| "Terminal"));
+        labels
+            .map(|label| {
+                let button = gtk::Button::with_label(label);
                 button.add_css_class("menu-tab");
                 button.set_focus_on_click(false);
                 tabs.append(&button);
@@ -155,6 +166,10 @@ pub fn choose(
         show_descriptions: menu.show_descriptions,
         list: list.downgrade(),
         empty: empty.downgrade(),
+        #[cfg(feature = "terminal")]
+        results: results.downgrade(),
+        #[cfg(feature = "terminal")]
+        terminal,
         cursor: RefCell::new(Cursor::new(&[], "", &config.search)),
     });
 
@@ -220,19 +235,39 @@ pub fn choose(
             if preediting.get() {
                 return glib::Propagation::Proceed;
             }
-            let Some(action) = bindings.action(key, modifiers) else {
-                let mods = modifiers
-                    & (gdk::ModifierType::SHIFT_MASK
-                        | gdk::ModifierType::CONTROL_MASK
-                        | gdk::ModifierType::ALT_MASK
-                        | gdk::ModifierType::SUPER_MASK);
-                if view.pages.len() > 1
+            use gdk::ModifierType as Mods;
+            let mods = modifiers
+                & (Mods::SHIFT_MASK | Mods::CONTROL_MASK | Mods::ALT_MASK | Mods::SUPER_MASK);
+            let active = view.active.get();
+            let count = view.tabs.len();
+            let in_terminal = active == view.pages.len();
+            if in_terminal
+                && key.to_lower() == gdk::Key::w
+                && mods == (Mods::CONTROL_MASK | Mods::SHIFT_MASK)
+            {
+                if let Some(window) = window.upgrade() {
+                    window.close();
+                }
+                return glib::Propagation::Stop;
+            }
+            let action = if in_terminal {
+                None
+            } else {
+                bindings.action(key, modifiers)
+            };
+            let Some(action) = action else {
+                let plain_tab = !in_terminal && (mods - Mods::SHIFT_MASK).is_empty();
+                let control_tab =
+                    count > view.pages.len() && mods - Mods::SHIFT_MASK == Mods::CONTROL_MASK;
+                if count > 1
                     && matches!(key, gdk::Key::Tab | gdk::Key::ISO_Left_Tab)
-                    && (mods.is_empty() || mods == gdk::ModifierType::SHIFT_MASK)
+                    && (plain_tab || control_tab)
                 {
-                    let active = view.active.get();
-                    let count = view.pages.len();
-                    let step = if mods.is_empty() { 1 } else { count - 1 };
+                    let step = if mods.contains(Mods::SHIFT_MASK) {
+                        count - 1
+                    } else {
+                        1
+                    };
                     view.switch_to((active + step) % count);
                     return glib::Propagation::Stop;
                 }
@@ -293,7 +328,13 @@ pub fn choose(
 
     window.connect_close_request({
         let event_loop = event_loop.clone();
+        #[cfg(feature = "terminal")]
+        let view = view.clone();
         move |_| {
+            #[cfg(feature = "terminal")]
+            if let Some(tab) = &view.terminal {
+                tab.cancel_spawn();
+            }
             event_loop.quit();
             glib::Propagation::Proceed
         }
@@ -301,9 +342,15 @@ pub fn choose(
     if menu.close_on_focus_loss {
         let was_active = Cell::new(false);
         let event_loop = event_loop.clone();
+        #[cfg(feature = "terminal")]
+        let view = view.clone();
         window.connect_is_active_notify(move |window| {
             let active = window.is_active();
             if was_active.replace(active) && !active && event_loop.is_running() {
+                #[cfg(feature = "terminal")]
+                if view.terminal.as_ref().is_some_and(TerminalTab::running) {
+                    return;
+                }
                 window.close();
             }
         });
@@ -334,6 +381,10 @@ struct View {
     show_descriptions: bool,
     list: glib::WeakRef<gtk::ListBox>,
     empty: glib::WeakRef<gtk::Label>,
+    #[cfg(feature = "terminal")]
+    results: glib::WeakRef<gtk::Box>,
+    #[cfg(feature = "terminal")]
+    terminal: Option<TerminalTab>,
     cursor: RefCell<Cursor>,
 }
 
@@ -360,6 +411,21 @@ impl View {
                 }
             }
         }
+        #[cfg(feature = "terminal")]
+        if let Some(tab) = &self.terminal {
+            let show_terminal = index == self.pages.len();
+            if let Some(results) = self.results.upgrade() {
+                results.set_visible(!show_terminal);
+            }
+            if let Some(entry) = self.entry.upgrade() {
+                entry.set_visible(!show_terminal);
+            }
+            if show_terminal {
+                tab.show();
+                return;
+            }
+            tab.widget.set_visible(false);
+        }
         if let Some(entry) = self.entry.upgrade() {
             entry.set_placeholder_text(Some(
                 self.prompt
@@ -372,6 +438,9 @@ impl View {
     }
 
     fn filter(&self, query: &str) {
+        if self.active.get() >= self.pages.len() {
+            return;
+        }
         let items = self.page().items(self.recent_apps).unwrap_or_default();
         *self.cursor.borrow_mut() = Cursor::new(items, query, &self.search);
         self.render();

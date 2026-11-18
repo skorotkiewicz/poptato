@@ -16,6 +16,8 @@ If GTK4 Layer Shell is unavailable, build with `cargo build --locked --no-defaul
 
 ## Run the checks
 
+Install the GTK4 VTE development files for the all-features Clippy check. See [Open a terminal tab](README.md#open-a-terminal-tab) for package names.
+
 ```sh
 cargo fmt --all -- --check
 cargo clippy --locked --all-targets --all-features -- -D warnings
