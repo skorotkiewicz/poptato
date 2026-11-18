@@ -1,0 +1,62 @@
+/* cupertino - vibrancy-ish panel, big quiet field, soft shadow. */
+
+.poptato .menu-panel {
+    font-family: "SF Pro Text", "Inter", "Segoe UI", "Cantarell", "Noto Sans", sans-serif;
+    /* margin gives the drop shadow room inside the transparent window */
+    margin: 24px;
+    border-radius: 18px;
+    box-shadow:
+        0 24px 56px rgba(0, 0, 0, 0.35),
+        0 4px 14px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* the field is the bar, not a box */
+.poptato .menu-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+    border-radius: 0;
+    padding: 8px 12px 12px 12px;
+    font-size: 22px;
+    font-weight: 300;
+    caret-color: #007AFF;
+}
+
+.poptato .menu-input selection {
+    background-color: rgba(0, 122, 255, 0.25);
+    color: #1D1D1F;
+}
+
+.poptato .menu-row {
+    border-radius: 10px;
+    transition: background-color 120ms ease;
+}
+
+.poptato .menu-row:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.poptato .menu-description {
+    font-size: 12px;
+}
+
+.poptato .menu-row:selected .menu-description {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.poptato .menu-empty {
+    padding: 18px;
+}
+
+/* Dark variant (also swap the four colors noted in config.toml):
+.poptato .menu-panel {
+    box-shadow: 0 24px 56px rgba(0, 0, 0, 0.55),
+                0 4px 14px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.poptato .menu-input { border-bottom-color: rgba(255, 255, 255, 0.10); }
+.poptato .menu-input selection { background-color: rgba(10, 132, 255, 0.35); color: #F5F5F7; }
+.poptato .menu-row:hover { background: rgba(255, 255, 255, 0.07); }
+*/

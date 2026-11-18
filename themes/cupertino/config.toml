@@ -1,0 +1,33 @@
+# cupertino - Spotlight-like. Best on a compositor (Wayland).
+
+[menu]
+width = 680
+lines = 7
+placement = "top"
+margin = 160
+prompt = "Search"
+empty_message = "No Results"
+
+[theme]
+font_family = "Inter"
+font_size = 15
+icon_size = 26
+padding = 10
+spacing = 6
+row_padding = 9
+border_width = 1
+radius = 18
+background = "#F6F6F8E8"
+foreground = "#1D1D1F"
+muted = "#86868B"
+input_background = "#FFFFFF00"
+border_color = "#00000024"
+selected_background = "#007AFF"
+selected_foreground = "#FFFFFF"
+css = "theme.css"
+
+# Dark variant: swap these four, then uncomment the block at the end of theme.css.
+# background = "#1E1E20E8"
+# foreground = "#F5F5F7"
+# muted = "#98989D"
+# border_color = "#FFFFFF2E"

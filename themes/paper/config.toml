@@ -1,0 +1,27 @@
+# paper - almost nothing, on purpose.
+
+[menu]
+width = 520
+lines = 7
+prompt = "Search"
+empty_message = "Nothing found"
+show_descriptions = false
+# show_icons = false  # uncomment for pure text
+
+[theme]
+font_family = "Inter"
+font_size = 15
+icon_size = 18
+padding = 12
+spacing = 8
+row_padding = 9
+border_width = 1
+radius = 12
+background = "#FBFBF8"
+foreground = "#26292C"
+muted = "#A6ABB0"
+input_background = "#FBFBF8"
+border_color = "#E6E6E0"
+selected_background = "#2E7D4F"
+selected_foreground = "#FFFFFF"
+css = "theme.css"

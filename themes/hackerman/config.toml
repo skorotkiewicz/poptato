@@ -1,0 +1,25 @@
+# hackerman - phosphor-green terminal. poptato --config themes/hackerman/config.toml
+
+[menu]
+width = 640
+lines = 10
+prompt = "root@poptato:~$"
+empty_message = "grep: no matches"
+
+[theme]
+font_family = "JetBrains Mono"
+font_size = 14
+icon_size = 18
+padding = 14
+spacing = 10
+row_padding = 8
+border_width = 1
+radius = 6
+background = "#070C08F0"
+foreground = "#8CFF9E"
+muted = "#4A8F5C"
+input_background = "#0C140D"
+border_color = "#00FF4155"
+selected_background = "#00FF41"
+selected_foreground = "#03140A"
+css = "theme.css"

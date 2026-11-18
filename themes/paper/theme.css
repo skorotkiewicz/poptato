@@ -1,0 +1,22 @@
+/* paper - optional polish. Remove css = "theme.css" and it still looks fine. */
+
+.poptato .menu-panel {
+    font-family: "Inter", "Cantarell", "Noto Sans", sans-serif;
+}
+
+/* seamless input: no box, just text on paper */
+.poptato .menu-input {
+    border: none;
+    background: transparent;
+    caret-color: #2E7D4F;
+    padding: 8px 9px;
+}
+
+.poptato .menu-input selection {
+    background-color: rgba(46, 125, 79, 0.22);
+    color: #26292C;
+}
+
+.poptato .menu-row:hover {
+    background: rgba(38, 41, 44, 0.05);
+}
