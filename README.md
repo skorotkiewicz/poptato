@@ -13,6 +13,11 @@
   <img src="assets/badges/potato-powered.svg" alt="Potato powered" height="34">
 </p>
 
+<p align="center">
+  <img src="assets/default-theme.png" alt="Poptato default theme" width="80%"><br>
+  <em>Default theme — tweakable via <code>config.toml</code></em>
+</p>
+
 **Poptato** is a small, keyboard-driven application launcher for Linux, written in Rust with GTK4. Launch desktop apps, run commands, pick from piped input, or invent your own menu modes.
 
 No elaborate ceremony. Type, choose, **pop!** 🥔
