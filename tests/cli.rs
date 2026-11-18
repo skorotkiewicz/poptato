@@ -2,7 +2,7 @@ use std::io::Write;
 use std::process::{Command, Output, Stdio};
 
 fn menu(args: &[&str], input: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_fzf-menu"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_poptato"))
         .args(args)
         .env("XDG_CONFIG_HOME", "")
         .env_remove("HOME")

@@ -4,7 +4,7 @@ mod keys;
 mod search;
 mod ui;
 
-use anyhow::{Context, Result, ensure};
+use anyhow::{Context, Result};
 use clap::Parser;
 use config::{Config, DEFAULT_CONFIG};
 use gtk::prelude::*;
@@ -73,7 +73,7 @@ fn main() -> ExitCode {
         Ok(true) => ExitCode::SUCCESS,
         Ok(false) => ExitCode::from(1),
         Err(error) => {
-            eprintln!("fzf-menu: {error:#}");
+            eprintln!("poptato: {error:#}");
             ExitCode::from(2)
         }
     }
@@ -110,12 +110,9 @@ fn run(cli: Cli) -> Result<bool> {
         cli.mode.as_deref().unwrap_or(default_mode)
     };
     if let Some(query) = cli.query {
+        config::validate_query(&query).context("--query")?;
         config.menu.query = query;
     }
-    ensure!(
-        !config.menu.query.contains('\0'),
-        "query must not contain NUL"
-    );
     if let Some(lines) = cli.lines {
         config.menu.lines = usize::from(lines);
     }

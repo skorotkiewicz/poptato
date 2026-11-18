@@ -56,7 +56,7 @@ pub fn choose(
     prompt: &str,
     allow_custom: bool,
 ) -> Result<Option<Selection>> {
-    glib::set_prgname(Some("fzf-menu"));
+    glib::set_prgname(Some("poptato"));
     gtk::init().context("could not open a graphical session")?;
     let display = gdk::Display::default().context("could not get the display")?;
     install_css(&display, &config.theme)?;
@@ -64,12 +64,12 @@ pub fn choose(
     let menu = &config.menu;
     let theme = &config.theme;
     let window = gtk::Window::builder()
-        .title("fzf-menu")
+        .title("Poptato")
         .decorated(false)
         .resizable(false)
         .default_width(menu.width)
         .build();
-    window.add_css_class("fzf-menu");
+    window.add_css_class("poptato");
     configure_surface(&window, menu);
 
     let panel = gtk::Box::new(gtk::Orientation::Vertical, theme.spacing);
@@ -79,6 +79,7 @@ pub fn choose(
     let entry = gtk::Entry::builder()
         .placeholder_text(prompt)
         .text(&menu.query)
+        .truncate_multiline(true)
         .build();
     entry.add_css_class("menu-input");
     panel.append(&entry);
@@ -162,6 +163,15 @@ pub fn choose(
         }
     });
 
+    let preediting = Rc::new(Cell::new(false));
+    if let Some(text) = entry.delegate().and_downcast::<gtk::Text>() {
+        let preediting = preediting.clone();
+        text.connect_local("preedit-changed", false, move |args| {
+            preediting.set(args[1].get::<&str>().is_ok_and(|text| !text.is_empty()));
+            None
+        });
+    }
+
     let keyboard = gtk::EventControllerKey::new();
     keyboard.set_propagation_phase(gtk::PropagationPhase::Capture);
     keyboard.connect_key_pressed({
@@ -170,6 +180,9 @@ pub fn choose(
         let window = window.downgrade();
         let selected = selected.clone();
         move |_, key, _, modifiers| {
+            if preediting.get() {
+                return glib::Propagation::Proceed;
+            }
             let Some(action) = bindings.action(key, modifiers) else {
                 return glib::Propagation::Proceed;
             };
@@ -231,10 +244,10 @@ pub fn choose(
     });
     if menu.close_on_focus_loss {
         let was_active = Cell::new(false);
+        let event_loop = event_loop.clone();
         window.connect_is_active_notify(move |window| {
-            if window.is_active() {
-                was_active.set(true);
-            } else if was_active.get() {
+            let active = window.is_active();
+            if was_active.replace(active) && !active && event_loop.is_running() {
                 window.close();
             }
         });
@@ -271,7 +284,7 @@ impl View {
             let end = (cursor.offset + self.lines).min(cursor.matches.len());
             cursor.matches[cursor.offset..end].to_vec()
         };
-        while let Some(child) = list.first_child() {
+        while let Some(child) = list.row_at_index(0) {
             list.remove(&child);
         }
         for index in visible {
@@ -360,11 +373,13 @@ fn configure_surface(window: &gtk::Window, menu: &Menu) {
     use crate::config::{Layer, Placement};
     use gtk4_layer_shell::{Edge, KeyboardMode, LayerShell};
 
-    if !gtk4_layer_shell::is_supported() {
+    if WidgetExt::display(window).type_().name() != "GdkWaylandDisplay"
+        || !gtk4_layer_shell::is_supported()
+    {
         return;
     }
     window.init_layer_shell();
-    window.set_namespace(Some("fzf-menu"));
+    window.set_namespace(Some("poptato"));
     window.set_keyboard_mode(KeyboardMode::Exclusive);
     window.set_layer(match menu.layer {
         Layer::Overlay => gtk4_layer_shell::Layer::Overlay,
@@ -407,8 +422,8 @@ fn install_css(display: &gdk::Display, theme: &Theme) -> Result<()> {
     let family = theme.font_family.replace('\\', "\\\\").replace('"', "\\\"");
     let css = format!(
         r#"
-        window.fzf-menu {{ background: transparent; }}
-        .fzf-menu .menu-panel {{
+        window.poptato {{ background: transparent; }}
+        .poptato .menu-panel {{
             background: {background};
             color: {foreground};
             font-family: "{family}";
@@ -417,7 +432,7 @@ fn install_css(display: &gdk::Display, theme: &Theme) -> Result<()> {
             border-radius: {radius}px;
             padding: {padding}px;
         }}
-        .fzf-menu .menu-input {{
+        .poptato .menu-input {{
             background: {input_background};
             color: {foreground};
             border: {border_width}px solid {border_color};
@@ -425,21 +440,21 @@ fn install_css(display: &gdk::Display, theme: &Theme) -> Result<()> {
             padding: {row_padding}px;
             box-shadow: none;
         }}
-        .fzf-menu .menu-input placeholder,
-        .fzf-menu .menu-description,
-        .fzf-menu .menu-empty {{ color: {muted}; }}
-        .fzf-menu .menu-list {{ background: transparent; color: {foreground}; }}
-        .fzf-menu .menu-row {{
+        .poptato .menu-input placeholder,
+        .poptato .menu-description,
+        .poptato .menu-empty {{ color: {muted}; }}
+        .poptato .menu-list {{ background: transparent; color: {foreground}; }}
+        .poptato .menu-row {{
             padding: {row_padding}px;
             border-radius: {inner_radius}px;
         }}
-        .fzf-menu .menu-row:hover {{ background: {input_background}; }}
-        .fzf-menu .menu-row:selected,
-        .fzf-menu .menu-row:selected .menu-description {{
+        .poptato .menu-row:hover {{ background: {input_background}; }}
+        .poptato .menu-row:selected,
+        .poptato .menu-row:selected .menu-description {{
             background: {selected_background};
             color: {selected_foreground};
         }}
-        .fzf-menu .menu-empty {{ padding: {row_padding}px; }}
+        .poptato .menu-empty {{ padding: {row_padding}px; }}
         "#,
         background = theme.background,
         foreground = theme.foreground,

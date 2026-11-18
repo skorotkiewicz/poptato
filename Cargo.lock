@@ -243,21 +243,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fzf-menu"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "fuzzy-matcher",
- "gio-unix",
- "gtk4",
- "gtk4-layer-shell",
- "serde",
- "shlex",
- "toml 0.9.12+spec-1.1.0",
-]
-
-[[package]]
 name = "gdk-pixbuf"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -677,6 +662,21 @@ name = "pkg-config"
 version = "0.3.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
+
+[[package]]
+name = "poptato"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "fuzzy-matcher",
+ "gio-unix",
+ "gtk4",
+ "gtk4-layer-shell",
+ "serde",
+ "shlex",
+ "toml 0.9.12+spec-1.1.0",
+]
 
 [[package]]
 name = "proc-macro-crate"

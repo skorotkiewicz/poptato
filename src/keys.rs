@@ -41,14 +41,9 @@ impl Bindings {
     }
 
     pub fn action(&self, key: Key, mods: Mods) -> Option<Action> {
-        let key = if key == Key::ISO_Left_Tab {
-            Key::Tab
-        } else {
-            key.to_lower()
-        };
         self.0
             .get(&(
-                key,
+                normalize(key),
                 mods & (Mods::CONTROL_MASK | Mods::ALT_MASK | Mods::SHIFT_MASK | Mods::SUPER_MASK),
             ))
             .copied()
@@ -75,5 +70,13 @@ fn parse(shortcut: &str) -> Result<(Key, Mods)> {
         ensure!(!mods.contains(modifier), "duplicate modifier {part:?}");
         mods |= modifier;
     }
-    Ok((key.to_lower(), mods))
+    Ok((normalize(key), mods))
+}
+
+fn normalize(key: Key) -> Key {
+    if key == Key::ISO_Left_Tab {
+        Key::Tab
+    } else {
+        key.to_lower()
+    }
 }

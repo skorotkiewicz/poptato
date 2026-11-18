@@ -152,6 +152,9 @@ impl Config {
     }
 
     fn validate(&self) -> Result<()> {
+        validate_query(&self.menu.query).context("menu.query")?;
+        validate_text(self.menu.prompt.as_deref().unwrap_or_default()).context("menu.prompt")?;
+        validate_text(&self.menu.empty_message).context("menu.empty_message")?;
         ensure!(
             (1..=50).contains(&self.menu.lines),
             "menu.lines must be 1–50"
@@ -200,8 +203,9 @@ impl Config {
             ensure!(valid, "theme.{key} must be a hex color");
         }
         ensure!(
-            !theme.font_family.trim().is_empty(),
-            "theme.font_family must not be empty"
+            !theme.font_family.trim().is_empty()
+                && !theme.font_family.chars().any(char::is_control),
+            "theme.font_family needs a nonempty font name without control characters"
         );
         for (name, mode) in &self.modes {
             ensure!(
@@ -212,6 +216,8 @@ impl Config {
                     && !builtin(name),
                 "invalid or reserved mode name {name:?}"
             );
+            validate_text(mode.prompt.as_deref().unwrap_or_default())
+                .with_context(|| format!("modes.{name}.prompt"))?;
             validate_command(&mode.source).with_context(|| format!("modes.{name}.source"))?;
             if let Some(action) = &mode.action {
                 validate_command(action).with_context(|| format!("modes.{name}.action"))?;
@@ -228,6 +234,17 @@ impl Config {
         );
         Ok(())
     }
+}
+
+pub fn validate_query(value: &str) -> Result<()> {
+    validate_text(value)?;
+    ensure!(!value.contains(['\n', '\r']), "query must be a single line");
+    Ok(())
+}
+
+fn validate_text(value: &str) -> Result<()> {
+    ensure!(!value.contains('\0'), "text must not contain NUL");
+    Ok(())
 }
 
 fn builtin(name: &str) -> bool {
@@ -256,7 +273,7 @@ fn default_path() -> Option<PathBuf> {
                 .filter(|path| path.is_absolute())
                 .map(|path| path.join(".config"))
         })
-        .map(|base| base.join("fzf-menu/config.toml"))
+        .map(|base| base.join("poptato/config.toml"))
 }
 
 fn merge(defaults: &mut toml::Table, overrides: toml::Table) {
