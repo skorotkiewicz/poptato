@@ -1,0 +1,181 @@
+/*
+ * Poptato GTK4 theme template
+ *
+ * Place this file beside config.toml and set css = "theme.css" under [theme].
+ * Remove the opening and closing comment markers around a block to enable it.
+ * The example values override Poptato's built-in styles when enabled.
+ *
+ * Set launcher placement, visible row count, icon size and visibility,
+ * description visibility, and tab position in config.toml.
+ *
+ * GTK CSS property reference
+ * https://docs.gtk.org/gtk4/css-properties.html
+ */
+
+/* Window background outside the panel */
+/*
+window.poptato {
+    background: transparent;
+}
+*/
+
+/* Panel surface, text, border, and spacing. Margin leaves room for a shadow. */
+/*
+.poptato .menu-panel {
+    background: #171b22;
+    color: #edf0f7;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    border: 1px solid #343d4c;
+    border-radius: 12px;
+    padding: 12px;
+    margin: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.28);
+}
+*/
+
+/* Search field and its keyboard focus indicator */
+/*
+.poptato .menu-input {
+    background: #1d222c;
+    color: #edf0f7;
+    border: 1px solid #343d4c;
+    border-radius: 8px;
+    padding: 8px 10px;
+    min-height: 24px;
+    font-size: 16px;
+    caret-color: #b8d0ff;
+}
+
+.poptato .menu-input:focus-within {
+    outline: 1px solid #91b4f0;
+    outline-offset: -1px;
+}
+*/
+
+/* Placeholder, highlighted query text, and text being composed by an IME */
+/*
+.poptato .menu-input placeholder {
+    color: #a0aabb;
+    opacity: 1;
+}
+
+.poptato .menu-input selection {
+    background-color: #b8d0ff;
+    color: #141d31;
+}
+
+.poptato .menu-input preedit {
+    text-decoration: underline;
+}
+*/
+
+/* Results list and ordinary rows */
+/*
+.poptato .menu-list {
+    background: transparent;
+}
+
+.poptato .menu-row {
+    padding: 8px 10px;
+    margin: 1px 0;
+    border-radius: 8px;
+}
+
+.poptato .menu-row:hover:not(:selected) {
+    background: #293344;
+}
+
+.poptato .menu-row:active:not(:selected) {
+    background: #35445c;
+}
+*/
+
+/* Result title, description, and icon. Symbolic icons follow the text color. */
+/*
+.poptato .menu-label {
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.poptato .menu-description {
+    color: #a0aabb;
+    font-size: 12px;
+}
+
+.poptato .menu-icon {
+    filter: grayscale(1);
+}
+*/
+
+/* Selected result and its text. Keep the text readable against the fill. */
+/*
+.poptato .menu-row:selected {
+    background: #b8d0ff;
+    color: #141d31;
+    box-shadow: inset 3px 0 #729bdf;
+}
+
+.poptato .menu-row:selected .menu-label,
+.poptato .menu-row:selected .menu-description {
+    background: transparent;
+    color: #141d31;
+}
+*/
+
+/* Empty results message */
+/*
+.poptato .menu-empty {
+    color: #a0aabb;
+    font-style: italic;
+    padding: 16px;
+}
+*/
+
+/* Tabs and their horizontal scrollbar, visible when the tabs overflow */
+/*
+.poptato .menu-tabs {
+    padding: 4px 0;
+}
+
+.poptato .menu-panel > scrolledwindow scrollbar.horizontal trough {
+    background: #1d222c;
+}
+
+.poptato .menu-panel > scrolledwindow scrollbar.horizontal slider {
+    min-height: 4px;
+    min-width: 24px;
+    border-radius: 4px;
+    background: #7286a4;
+}
+*/
+
+/* Tab buttons. The active mode uses the .selected class. */
+/*
+.poptato .menu-tab {
+    background: #1d222c;
+    color: #edf0f7;
+    border: 1px solid #343d4c;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 13px;
+}
+
+.poptato .menu-tab:hover:not(.selected) {
+    background: #293344;
+}
+
+.poptato .menu-tab:active:not(.selected) {
+    background: #35445c;
+}
+
+.poptato .menu-tab:focus-visible {
+    outline: 1px solid currentColor;
+    outline-offset: -3px;
+}
+
+.poptato .menu-tab.selected {
+    background: #b8d0ff;
+    color: #141d31;
+}
+*/
