@@ -143,6 +143,18 @@ The complete, commented reference is in [config.toml](config.toml). Use `--confi
 poptato --config ~/.config/poptato/config.toml --check-config
 ```
 
+Browse the bundled themes and their screenshots in [themes/](themes/). To try Blackcurrant from the repository root, run `poptato --config themes/blackcurrant/config.toml`.
+
+To make Paper your default, run these commands from the repository root. This replaces any existing `config.toml` and `theme.css` in your Poptato config directory.
+
+```bash
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/poptato"
+mkdir -p "$config_dir"
+cp themes/paper/config.toml themes/paper/theme.css "$config_dir/"
+```
+
+Use another theme's directory in place of `themes/paper` to install it instead.
+
 For extra styling, set `css = "theme.css"` under `[theme]`. Relative CSS paths resolve beside the config file. Style hooks include `.poptato .menu-panel`, `.menu-input`, `.menu-list`, `.menu-row:selected`, `.menu-label`, `.menu-description`, `.menu-icon`, and `.menu-empty`.
 
 Bindings use GDK names (`Return`, `Page_Down`, `F2`) plus `Ctrl`, `Alt`, `Shift`, or `Super`. Set a binding to `[]` to disable it.
