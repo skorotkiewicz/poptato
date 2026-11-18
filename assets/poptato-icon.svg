@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Poptato mascot</title>
+  <desc id="desc">A grinning, bespectacled potato with a leafy sprout pops out of a command launcher.</desc>
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFE49A"/>
+      <stop offset=".55" stop-color="#F6B94E"/>
+      <stop offset="1" stop-color="#D88B35"/>
+    </linearGradient>
+    <linearGradient id="search" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#303C49"/>
+      <stop offset="1" stop-color="#19232D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- The little lines are the "pop". No actual potatoes were harmed. -->
+  <g fill="none" stroke="#E9AF47" stroke-linecap="round" stroke-width="8">
+    <path d="M55 95 37 79M70 67 60 46M248 79l19-16M270 111l21-5"/>
+  </g>
+  <path d="m255 50 4 11 11 4-11 4-4 11-4-11-11-4 11-4Z" fill="#9FE5AA"/>
+
+  <!-- A sprout doubles as the app's ridiculously tiny antenna. -->
+  <path d="M160 86q-3-28 7-46" fill="none" stroke="#426D4B" stroke-width="8" stroke-linecap="round"/>
+  <path d="M166 53C147 27 129 28 121 26c3 25 18 40 45 35Z" fill="#77C584" stroke="#3C6D4F" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M164 47c13-23 32-25 51-23-6 27-25 38-48 37Z" fill="#A9EDA0" stroke="#3C6D4F" stroke-width="5" stroke-linejoin="round"/>
+
+  <!-- Waving arms behind the potato. -->
+  <path d="M83 164q-27-15-40-37m3 4-17-4m16 5-8-17" fill="none" stroke="#88552D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M232 161q29-13 39-37m-1 2 17-7m-18 9 5-19" fill="none" stroke="#88552D" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Irregular silhouette: unmistakably a potato, not a circle with eyes. -->
+  <path d="M164 68c31-10 66 5 76 33 12 16 13 34 6 48 9 22-2 49-19 60-6 29-34 47-64 43-21 6-44-1-57-17-27-1-49-20-52-45-13-22-6-49 12-62-1-24 14-45 39-50 18-16 40-16 59-10Z" fill="url(#skin)" stroke="#87542F" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M91 115c12-25 35-37 55-35" fill="none" stroke="#FFF0BD" stroke-width="12" stroke-linecap="round" opacity=".65"/>
+  <g fill="#CB853F" opacity=".8">
+    <ellipse cx="101" cy="157" rx="5" ry="3" transform="rotate(-24 101 157)"/>
+    <ellipse cx="204" cy="107" rx="6" ry="4" transform="rotate(21 204 107)"/>
+    <ellipse cx="216" cy="196" rx="5" ry="3" transform="rotate(-35 216 196)"/>
+    <ellipse cx="121" cy="220" rx="4" ry="3"/>
+  </g>
+
+  <!-- Smart potato, questionable spectacles prescription. -->
+  <g fill="none" stroke="#754729" stroke-width="5" stroke-linecap="round">
+    <circle cx="133" cy="145" r="22"/>
+    <circle cx="191" cy="145" r="22"/>
+    <path d="M155 141q7-5 14 0M111 137l-15-4M213 137l14-6"/>
+  </g>
+  <g fill="#342B29">
+    <ellipse cx="137" cy="146" rx="6" ry="9"/>
+    <ellipse cx="187" cy="146" rx="6" ry="9"/>
+  </g>
+  <g fill="#FFF7D9">
+    <circle cx="139" cy="142" r="2.5"/>
+    <circle cx="189" cy="142" r="2.5"/>
+  </g>
+  <path d="M143 182q22 25 44-1" fill="none" stroke="#754729" stroke-width="6" stroke-linecap="round"/>
+  <ellipse cx="117" cy="179" rx="11" ry="7" fill="#E99468" opacity=".55"/>
+  <ellipse cx="211" cy="179" rx="11" ry="7" fill="#E99468" opacity=".55"/>
+
+  <!-- Launcher window. Potato pops out from behind the search field. -->
+  <rect x="27" y="231" width="266" height="65" rx="21" fill="url(#search)" stroke="#526477" stroke-width="5"/>
+  <path d="m52 253 13 11-13 11" fill="none" stroke="#A8EBC0" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M80 276h17" stroke="#A8EBC0" stroke-width="6" stroke-linecap="round"/>
+  <text x="113" y="274" fill="#D7E4E6" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700">pop!</text>
+  <rect x="226" y="243" width="51" height="41" rx="12" fill="#F8C667"/>
+  <path d="m241 257 8 10 12-15" fill="none" stroke="#243442" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

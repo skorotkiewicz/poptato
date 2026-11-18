@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 34" role="img" aria-label="keyboard first">
+  <rect x=".5" y=".5" width="221" height="33" rx="10" fill="#263640" stroke="#60737A"/>
+  <rect x="11" y="9" width="28" height="17" rx="4" fill="none" stroke="#AAEDBF" stroke-width="2"/>
+  <path d="M16 14h3m5 0h3m5 0h2m-18 5h4m4 0h4m4 0h2m-16 4h14" stroke="#AAEDBF" stroke-linecap="round" stroke-width="2"/>
+  <text x="51" y="22" font-family="DejaVu Sans, Liberation Sans, sans-serif" font-size="12" font-weight="700" letter-spacing="1" fill="#C9F4D6">KEYBOARD FIRST</text>
+</svg>

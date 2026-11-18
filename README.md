@@ -1,116 +1,152 @@
-# Poptato
+<p align="center">
+  <img src="assets/poptato-logo.svg" alt="Poptato — a happy potato popping out of a launcher. Small launcher, big potato energy." width="900">
+</p>
 
-A keyboard-driven Linux launcher written in Rust. Open installed applications,
-run commands on your `PATH`, or pipe in a list and print the selected line.
-The menu uses GTK and matches as you type.
+<p align="center">
+  <a href="https://aur.archlinux.org/packages/poptato-bin"><img src="https://img.shields.io/aur/version/poptato-bin?logo=archlinux&label=AUR&color=F6C46B" alt="AUR version"></a>
+  <a href="https://github.com/skorotkiewicz/poptato/actions/workflows/ci.yml"><img src="https://github.com/skorotkiewicz/poptato/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.92%2B-BD7140?logo=rust&logoColor=white" alt="Rust 1.92 or newer"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-92BC87" alt="MIT license"></a>
+</p>
+<p align="center">
+  <img src="assets/badges/keyboard-first.svg" alt="Keyboard first" height="34">
+  <img src="assets/badges/potato-powered.svg" alt="Potato powered" height="34">
+</p>
 
-## Install
+**Poptato** is a small, keyboard-driven application launcher for Linux, written in Rust with GTK4. Launch desktop apps, run commands, pick from piped input, or invent your own menu modes.
 
-Build with Rust 1.92 or newer, `pkg-config`, and the development files for
-GTK 4 and GTK4 Layer Shell.
+No elaborate ceremony. Type, choose, **pop!** 🥔
 
-```sh
+## Get it while it's hot
+
+**Arch Linux (AUR):**
+
+```bash
+yay -S poptato-bin
+```
+
+Then try:
+
+```bash
+poptato --mode apps
+```
+
+**Build from source:** Requires Rust 1.92+, GTK4 development files, `pkg-config`, and optionally GTK4 Layer Shell development files (enabled by default).
+
+On Arch:
+
+```bash
+sudo pacman -S --needed base-devel rust pkgconf gtk4 gtk4-layer-shell
+git clone https://github.com/skorotkiewicz/poptato.git
+cd poptato
 cargo install --path . --locked
 ```
 
-On Wayland compositors that support layer shell, the menu opens as a keyboard-focused
-overlay. On X11 and other Wayland compositors, it opens as an undecorated window
-that your window manager places. To build with GTK 4 alone, add
-`--no-default-features` to the install command.
-[GTK4 Layer Shell](https://github.com/wmww/gtk4-layer-shell#supported-desktops)
+For a GTK4-only build without layer-shell integration:
 
-## Use
-
-```sh
-poptato --mode apps
-poptato --mode run
-printf '%s\n' alpha beta gamma | poptato --dmenu -p 'Pick a value'
+```bash
+cargo install --path . --locked --no-default-features
 ```
 
-Bind `poptato --mode apps` to a shortcut in your desktop or window manager
-to open the launcher from anywhere. With no mode flag, piped or redirected
-stdin selects dmenu mode. Otherwise the default is `apps`.
+## Three ways to pop (and one you make yourself)
 
-| Key | Action |
-| --- | --- |
-| Up, Ctrl+K | Previous result |
-| Down, Ctrl+J | Next result |
-| Page Up, Page Down | Move one page |
-| Enter | Accept the highlighted result |
-| Shift+Enter | Accept the typed text in modes that allow it |
-| Escape, Ctrl+G | Cancel |
+| Mode | What it does | Try it |
+| --- | --- | --- |
+| **Apps** | Find and launch installed desktop applications, with icons and descriptions. | `poptato --mode apps` |
+| **Run** | Find executables on your `PATH` or type a command with arguments. | `poptato --mode run` |
+| **Dmenu** | Read lines from stdin, show a picker, print the selected line to stdout. | `poptato --dmenu` (with piped input) |
+| **Custom** | Populate a menu from a command and optionally run an action on selection. | `poptato --mode colors` (after configuring it below) |
 
-Enter also accepts typed text when there are no matches and the mode allows it.
-Use `--no-custom` to require a match. In run mode, typed commands support quoted
-arguments. Use an explicit shell command if you need shell syntax.
+The search defaults to **fuzzy matching**; substring and prefix matching are also available. A query can match application names, descriptions, and keywords.
 
-Dmenu mode reads UTF-8 lines from stdin and writes the selection to stdout.
-Success exits with status 0, cancellation with 1, and errors with 2.
-For a noninteractive search, `--list` prints every match and skips the popup.
+### Actually useful little tricks
 
-```sh
+```bash
+# A one-off picker. The winner goes to stdout.
+printf '%s\n' alpha beta gamma | poptato --dmenu -p 'Choose wisely'
+
+# Search and print matches without opening a window.
 printf '%s\n' alpha beta gamma | poptato --list --query bt
+
+# Rofi-flavored aliases, if your muscle memory refuses to move out.
 poptato -show drun
+
+# All the switches.
 poptato --help
 ```
 
-## Configure
+Without an explicit mode, Poptato opens the configured mode (apps by default), or switches to dmenu when stdin is piped or redirected.
 
-The launcher reads `$XDG_CONFIG_HOME/poptato/config.toml`, or
-`~/.config/poptato/config.toml` when `XDG_CONFIG_HOME` is unset, empty, or relative.
-Use `--config FILE` to load a different file. You can start from the commented
-[default config](config.toml), or create a file with only the settings you want
-to change.
+## Make the keyboard do the work
 
-These commands create your first config in the default directory.
+| Key | Action |
+| --- | --- |
+| `↑` / `Ctrl+K` | Previous match |
+| `↓` / `Ctrl+J` | Next match |
+| `Page Up` / `Page Down` | Jump one page |
+| `Enter` | Accept the selected match |
+| `Shift+Enter` | Accept what you typed (in modes that permit it) |
+| `Esc` / `Ctrl+G` | Cancel |
 
-```sh
+Typed text is also accepted with `Enter` when there are no matches and the mode allows custom input. Add `--no-custom` to require a matching item.
+
+### Give it a hotkey
+
+Bind `poptato --mode apps` in your compositor or desktop environment, and your launcher is one keypress away. For example, in **niri**'s `binds` block:
+
+```kdl
+Mod+Space { spawn "poptato" "--mode" "apps"; }
+```
+
+On Wayland compositors with layer-shell support, Poptato opens as a keyboard-focused overlay. On X11 and other Wayland compositors, it uses an undecorated GTK window. See [GTK4 Layer Shell's compositor support](https://github.com/wmww/gtk4-layer-shell#supported-desktops).
+
+## Season to taste
+
+Configuration lives at `~/.config/poptato/config.toml` (or `$XDG_CONFIG_HOME/poptato/config.toml` when set to an absolute path).
+
+Create a starting config:
+
+```bash
 mkdir -p ~/.config/poptato
 poptato --print-config > ~/.config/poptato/config.toml
 ```
 
+Or use just the settings you want to override:
+
 ```toml
 [menu]
-width = 480
-lines = 6
-placement = "top"
-show_descriptions = false
+width = 560
+lines = 8
+placement = "center"
 
 [search]
-matching = "substring"
+matching = "fuzzy" # fuzzy, substring, or prefix
 
 [theme]
 font_size = 16
-selected_background = "#a5d6a7"
+selected_background = "#F6C46B"
+selected_foreground = "#19232D"
 
 [keys]
-down = ["Down", "Ctrl+n"]
-up = ["Up", "Ctrl+p"]
+down = ["Down", "Ctrl+j"]
+up = ["Up", "Ctrl+k"]
 ```
 
-`placement`, `margin`, and `layer` apply to layer-shell windows. With
-`close_on_focus_loss` enabled, the launcher closes when the window loses focus.
-Layer-shell overlays request exclusive keyboard focus.
+The complete, commented reference is in [config.toml](config.toml). Use `--config FILE` for another config and `--check-config` to validate it.
 
-Set a key's list to `[]` to disable that binding. Key names use GDK spelling,
-such as `Return`, `Page_Down`, or `F2`. Modifiers are `Ctrl`, `Alt`, `Shift`,
-and `Super`.
-
-For additional styling, set `theme.css = "theme.css"`. Relative paths are
-resolved next to `config.toml`. CSS selectors include `.poptato .menu-panel`,
-`.menu-input`, `.menu-list`, `.menu-row:selected`, `.menu-label`,
-`.menu-description`, `.menu-icon`, and `.menu-empty`.
-
-```sh
-poptato --print-config
-poptato --config config.toml --check-config
+```bash
+poptato --config ~/.config/poptato/config.toml --check-config
 ```
 
-## Add a custom mode
+For extra styling, set `css = "theme.css"` under `[theme]`. Relative CSS paths resolve beside the config file. Style hooks include `.poptato .menu-panel`, `.menu-input`, `.menu-list`, `.menu-row:selected`, `.menu-label`, `.menu-description`, `.menu-icon`, and `.menu-empty`.
 
-A custom mode runs a command to get its list. Its optional action runs when you
-choose a result. Each exact `{selection}` argument is replaced with the result
-as a single argument, including any spaces or quotes.
+Bindings use GDK names (`Return`, `Page_Down`, `F2`) plus `Ctrl`, `Alt`, `Shift`, or `Super`. Set a binding to `[]` to disable it.
+
+## Grow your own mode
+
+Custom modes source their items from a command. They can print a selection or pass it to another command without mangling spaces and quotes.
+
+Add this to `config.toml`:
 
 ```toml
 [modes.colors]
@@ -119,5 +155,21 @@ source = ["printf", "%s\n", "red", "green", "blue"]
 action = ["notify-send", "Color", "{selection}"]
 ```
 
-Run it with `poptato --mode colors`. Omit `action` to print the selection to
-stdout. To preview what the source returns, run `poptato --mode colors --list`.
+Run your menu:
+
+```bash
+poptato --mode colors
+```
+
+Each exact `{selection}` argument is replaced with the chosen line as **one argument**, even if it contains spaces. Leave out `action` to print the selection to stdout. Preview the generated list with `poptato --mode colors --list`.
+
+## Tiny details, big difference
+
+- Poptato runs commands directly. For shell operators (`|`, `&&`, redirects), explicitly invoke your shell.
+- Dmenu mode reads UTF-8 lines and preserves the selected text.
+- Exit status is **0** for success, **1** for cancellation, **2** for errors.
+- The repository includes a [`justfile`](justfile) with `just build`, `just check`, and `just test` for development.
+
+---
+
+Made with Rust, GTK4, and an unreasonable amount of potato confidence. Licensed under [MIT](LICENSE).
