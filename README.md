@@ -145,6 +145,8 @@ poptato --config ~/.config/poptato/config.toml --check-config
 
 Browse the bundled themes and their screenshots in [themes/](themes/). To try Blackcurrant from the repository root, run `poptato --config themes/blackcurrant/config.toml`.
 
+The AUR package installs themes in `/usr/share/poptato/themes/`. Try Paper with `poptato --config /usr/share/poptato/themes/paper/config.toml`.
+
 To make Paper your default, run these commands from the repository root. This replaces any existing `config.toml` and `theme.css` in your Poptato config directory.
 
 ```bash
@@ -153,7 +155,7 @@ mkdir -p "$config_dir"
 cp themes/paper/config.toml themes/paper/theme.css "$config_dir/"
 ```
 
-Use another theme's directory in place of `themes/paper` to install it instead.
+If you installed `poptato-bin` from the AUR, replace `themes/paper` with `/usr/share/poptato/themes/paper` in the copy command. To install a different theme, use its directory.
 
 For extra styling, set `css = "theme.css"` under `[theme]`. Relative CSS paths resolve beside the config file. Style hooks include `.poptato .menu-panel`, `.menu-input`, `.menu-list`, `.menu-row:selected`, `.menu-label`, `.menu-description`, `.menu-icon`, and `.menu-empty`.
 

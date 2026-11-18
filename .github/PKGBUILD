@@ -1,5 +1,5 @@
 pkgname=poptato-bin
-pkgver=0.1.0
+pkgver=0.0.0
 pkgrel=1
 pkgdesc='Keyboard-driven app launcher, command runner, and fuzzy menu for Linux'
 arch=('x86_64' 'aarch64')
@@ -19,4 +19,8 @@ package() {
     install -Dm644 config.toml "${pkgdir}/usr/share/doc/${pkgname}/config.toml"
     install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
     install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    local theme
+    for theme in themes/*/; do
+        install -Dm644 -t "${pkgdir}/usr/share/poptato/$theme" "${theme}config.toml" "${theme}theme.css"
+    done
 }

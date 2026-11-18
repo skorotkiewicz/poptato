@@ -72,8 +72,12 @@ jobs:
           install -Dm644 README.md dist/bundle/README.md
           install -Dm644 LICENSE dist/bundle/LICENSE
           install -Dm644 config.toml dist/bundle/config.toml
+          for config in themes/*/config.toml; do
+            theme="${config%/*}"
+            install -Dm644 -t "dist/bundle/$theme" "$config" "$theme/theme.css"
+          done
           tar -C dist/bundle -czf "dist/poptato-${VERSION}-${ARCH}-linux.tar.gz" \
-            poptato README.md LICENSE config.toml
+            poptato README.md LICENSE config.toml themes
 
       - uses: actions/upload-artifact@v4
         with:
