@@ -184,6 +184,10 @@ Each exact `{selection}` argument is replaced with the chosen line as **one argu
 
 ## Open a terminal tab
 
+<p align="center">
+  <img src="assets/terminal.png" width="80%"><br>
+</p>
+
 To include an embedded terminal, install the GTK4 VTE development files (`vte4` on Arch or `libvte-2.91-gtk4-dev` on Debian) and build from source.
 
 ```bash
